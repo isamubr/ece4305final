@@ -1,5 +1,5 @@
 %
-%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%
 %Main script Course Design Project of ECE4305: Software-Defined Radio Systems and Analysis
 %
 %   Team 6
@@ -22,20 +22,24 @@
 % create
 % Import the objects
 import FrameObj
-clear all
-close all
+clear *;
+close all;
+
 nFrames = 1; % number of frames that will be sent to caculate the FER of the network
 errors =0;
-message = 'test';
+
 sendersIDS = [FrameObj.IDUE1 FrameObj.IDUE3 FrameObj.IDUE2 FrameObj.IDUE3 FrameObj.IDUE1 FrameObj.IDUE2];
 receiversIDS = [FrameObj.IDUE3 FrameObj.IDUE1 FrameObj.IDUE3 FrameObj.IDUE2 FrameObj.IDUE2 FrameObj.IDUE1];
 nTest = length(sendersIDS);
 FER = zeros(nTest,1);
 
 % the sedn ID and receiver ID will be defined with other teams
-for indexTest = 1:nTest
-    tempString =   strcat(sendersIDS, '_', receiversIDS, '_Hello');
-    frame = FrameObj(FrameObj.FRAMEDATA,receiversIDS(indexTest),sendersIDS(indexTest),tempString);
+for indexTest = 1:1
+    tempString =   strcat(num2str(sendersIDS), '_', num2str(receiversIDS), '_Hello');
+    frame = FrameObj(FrameObj.DATAFRAME,receiversIDS(indexTest),sendersIDS(indexTest),tempString);
+    
+    frameText = FrameObj(frame.frameArray);
+    
     for stepFram = 1:nFrames
         switch frame.sndID
             case FrameObj.IDUE1
