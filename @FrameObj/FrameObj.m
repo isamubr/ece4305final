@@ -30,21 +30,18 @@ classdef FrameObj
         TIMEOUT = 4;
     end
     properties
-        frameType %When sending messages we will use at least two types of frames, the Data frame, and ACK frame
-        rcvID %The identification number of the destination receiver
-%         nexthopID %The identification number of the next reception hop %%%may or may not be necessary
-        sndID %The identification number of the sender.
-%         sn %The sequence number is optional if it is necessary to deal with the situation when ACK is corrupt or lost.
-        data  %data field    
+        frameType   %When sending messages we will use at least two types of frames, the Data frame, and ACK frame
+        rcvID       %The identification number of the destination receiver
+        sndID       %The identification number of the sender.
+        data        %data field    
     end
     properties (Dependent)
-        dataSize %Indicates the length of the payload.
-        CRC8 % crc-8 code verfication of the data field
-        frameArray % The frame as a n*1 array
+        dataSize    %Indicates the length of the payload.
+        CRC8        %crc-8 code verfication of the data field
+        frameArray  %The frame as a n*1 array
     end
     
     methods
-        %function obj = FrameObj(inputframeType,inputrcvID,inputnexthopID,inputsndID,inputData)
         function obj = FrameObj(inputframeType,inputrcvID,inputsndID,inputData)
             
             %create a sequence number from 0 to 255 
@@ -56,8 +53,6 @@ classdef FrameObj
                 obj.frameType = inputframeType;
                 %receiver verfication
                 obj.rcvID = inputrcvID;
-                %ADD if we need next hop
-%                 obj.nexthopID = inputnexthopID;
                 %sender verfication
                 obj.sndID = inputsndID;
                 obj.data = inputData;
@@ -68,8 +63,7 @@ classdef FrameObj
                 obj.rcvID=bi2de(bitwiseInput(1+8:2*8,1)','left-msb');
                 obj.sndID=bi2de(bitwiseInput(1+2*8:3*8,1)','left-msb');
                 temp = bitwiseInput(1+3*8:5*8,1)';
-                dataSizeTemp=bi2de(temp,'left-msb');
-                
+                dataSizeTemp=bi2de(temp,'left-msb');   
             else
                 error('That is not a valid number of inputs')
             end
@@ -88,11 +82,6 @@ classdef FrameObj
         function obj = set.rcvID(obj,inputrcvID)
             obj.rcvID = uint8(inputrcvID);
         end
-        
-        %IF we need next hop
-%         function obj = set.nexthopID(obj,inputnexthopID)
-%             obj.nexthopID = uint8(inputnexthopID);
-%         end
         
         function obj = set.sndID(obj,inputsndID)
             obj.sndID = uint8(inputsndID);
@@ -123,22 +112,13 @@ classdef FrameObj
             type_array  = de2bi(obj.frameType,8,'left-msb');
             rcvid_array = de2bi(obj.rcvID,8,'left-msb');
             sndid_array = de2bi(obj.sndID,8,'left-msb');
-            dataSize_array = de2bi(obj.dataSize,16,'left-msb');
-            
-            %If we need a next hop
-%             nhid_array = de2bi(obj.nexthopID,8,'left-msb');
-            %If we need a sequence number
-%             sn_array = de2bi(obj.sn,8,'left-msb');
-            %If we need a data size indicator
-%             ds_array = de2bi(obj.dataSize,8,'left-msb');
+            size_array  = de2bi(obj.dataSize,16,'left-msb');
 
             switch obj.frameType
                 case obj.DATAFRAME
-                    value = [type_array'; rcvid_array'; sndid_array'; dataSize_array'; obj.data];
-%                     value = [type_array'; rcvid_array'; nhid_array'; sendid_array'; sn_array'; ds_array';dataSize_array'; obj.data];
+                    value = [type_array'; rcvid_array'; sndid_array'; size_array'; obj.data];
                 case obj.ACKFRAME
-                    value = [type_array'; rcvid_array'; sndid_array'; dataSize_array'];
-%                     value = [type_array'; rcvid_array'; nhid_array'; sendid_array';dataSize_array'];
+                    value = [type_array'; rcvid_array'; sndid_array';];
                 otherwise
                     error('Not a supported frame type')
             end
