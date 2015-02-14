@@ -33,7 +33,7 @@ classdef FrameObj
         frameType   %When sending messages we will use at least two types of frames, the Data frame, and ACK frame
         rcvID       %The identification number of the destination receiver
         sndID       %The identification number of the sender.
-        data        %data field    
+        data        %data field that cuts off after more than 234 bytes  
     end
     properties (Dependent)
         dataSize    %Indicates the length of the payload.
@@ -90,8 +90,15 @@ classdef FrameObj
         %data actually refers to the data and the CRC8 number ??
         function obj = set.data(obj,inputdata)
             temp_bin = reshape(dec2bin(inputdata,8)',1,[]);
-            for j=1:size(temp_bin,2)
-                temp_data(1,j) = str2num(temp_bin(1,j));
+            data_bits = 234*8;
+            if size(temp_bin,2)>=data_bits
+                for j=1:data_bits
+                    temp_data(1,j) = str2num(temp_bin(1,j));
+                end
+            else
+                for j=1:size(temp_bin,2)
+                    temp_data(1,j) = str2num(temp_bin(1,j));
+                end
             end
             crcGen = comm.CRCGenerator([8 7 6 4 2 0]);
             obj.data =  step(crcGen, temp_data');
