@@ -1,7 +1,7 @@
 classdef FrameObj
     %FRAMEOBJ creates frames and decodes them
     %   There are 2 input configuraions; 4 inputs mean you are using the
-    %   frame requirements to create a FrameObj, 1 means you are means you
+    %   frame requirements to create a FrameObj, 1 input means you are
     %   are using the bits.
     
     properties (Constant)
@@ -26,15 +26,14 @@ classdef FrameObj
     end
     properties
         classUse    %Identified whether we are
-        frameType   %When sending messages we will use several frame types,
-                    %constants for more.
+        frameType   %When sending messages we will use several frame types
         rcvID       %The identification number of the destination receiver
         sndID       %The identification number of the sender.
         data        %The data field (cuts off after more than 235 bytes)
         
     end
     properties (Dependent)
-        dataSize    %Indicates the length of the payloadin bytes.
+        dataSize    %Indicates the length of the payload in bytes.
         CRC8        %CRC-8 code verfication of the data field
         frameArray  %The frame as a n*1 array
     end
@@ -42,12 +41,10 @@ classdef FrameObj
     methods
         %This part sets the inputs to the property functions down below.
         %Those functions define the actual properties, this is where we
-        %call those functions. 4 inputs mean you are using the frame
-        %requirements to create a FrameObj, 1 means you are means you are
-        %using the bits.
+        %call those functions. 
         function obj = FrameObj(inputType,inputrcvID,inputsndID,inputData)
             
-            % create intial packetge with 4 inputs
+            % create a FrameObj with 4 inputs from the frame requirements
             if nargin == 4
                 obj.classUse = inputType;
                 %test if the frame type is valid
@@ -56,23 +53,22 @@ classdef FrameObj
                 obj.sndID = inputsndID;
                 obj.data = inputData;
                 
-                %create the final packet with 1 array of bits
+            %create a FrameObj with 1 array of bits
             elseif nargin == 1
-                %not sure if we need to do this or if this is just a
-                %reminder that inputframeType is not the data that is being
-                %used in this case
+                %Not sure if we need to do this. It might just be a
+                %reminder that inputType is not the data that is being used 
+                %by the class properties in this case.
                 bitwise = inputType;
                 obj.classUse = bitwise;
-                %we are actually decoding the array of bits here and then
-                %passing the pretty numbers we get to the property
-                %functions
+                %We are actually converting the array of bits here and then
+                %passing the pretty decimal numbers we get to the property
+                %functions.
                 obj.frameType = bi2de(bitwise(1:8,1)','left-msb');
                 obj.rcvID =     bi2de(bitwise(1+8:2*8,1)','left-msb');
                 obj.sndID =     bi2de(bitwise(1+2*8:3*8,1)','left-msb');
-                
-                %Whether there is data or not depends on frameType
-                %The location of data in the frame is dependent on dataSize
-                %so we pass the unaltered input to obj.data
+                %Whether there is data or not depends on frameType the 
+                %location of data in the frame is dependent on dataSize so 
+                %we pass the unaltered FrameObj input to obj.data
                 obj.data = bitwise;
                 
             else %incorrect number of inputs
@@ -83,7 +79,8 @@ classdef FrameObj
 %classUse
         %This property enables us to distingush between the two uses of the
         %class FrameObj though the length of the first (or only) input.
-        %This is only used by obj.data
+        %This is only used by obj.data which takes both string type inputs 
+        %and arrays of bits and needs to be able to distinguish them
         function obj= set.classUse(obj,inputframeType)
             [array_or_vector,~] = size(inputframeType);
             if array_or_vector == 1
@@ -104,9 +101,9 @@ classdef FrameObj
                     obj.frameType = uint8(inputframeType);
                 otherwise
                     error('Not a supported frame type for FrameObj')
-                    % if you get this error using a legitimate frame type
-                    % that should exist plese add an addiional case
-                    % statement for that frame type
+                    % If this error occurs while using a legitimate frame
+                    % type please add an addiional case statement for that
+                    % frame type.
             end
         end
         
@@ -145,28 +142,29 @@ classdef FrameObj
                             end
                         end
                         crcGen = comm.CRCGenerator([8 7 6 4 2 0]);
-                        % calculates the CRC and adds it to the end of data
+                        %Calculates the CRC and adds it to the end of data
                         obj.data =  step(crcGen, temp_data');
                     elseif obj.classUse == FrameObj.DECODE;
-                        %this seperates the data from the rest of the array
-                        %using the data size
-                        %first seperate datasize and convert to decimal
+                        %This seperates the data from the rest of the array
+                        %using dataSize
+                        %First seperate dataSize then convert to decimal
                         Temp =  bi2de(datainput(1+3*8:4*8,1)','left-msb');
-                        ds = double(Temp+1); %add 1 for CRC,cast to double
-                        ds = (ds*8);          %convert from bytes to bits
-                        %seperate data using length(ds) & start(index 33)
+                        ds = double(Temp+1); %Add 1 for CRC, Cast to double
+                        ds = (ds*8);         %Convert from bytes to bits
+                        %Seperate data using length (ds) & start
+                        %(index 4*8+1)
                         obj.data = double(datainput(4*8+1:(4*8)+ds,1));
                     end
                 case FrameObj.ACKFRAME %ACK
                     obj.data = '';
                 otherwise
                     error('Not a supported frame type for data')
-                    % if you get this error using a legitimate frame type
-                    % that should exist plese add an addiional elseif for
-                    % that frame type.
+                    % If this error occurs while using a legitimate frame
+                    % type please add an addiional case statement for that
+                    % frame type.
                     % if there is no data for this frame type copy ACKFRAME
-                    % if there is str data copy DATAFRAME
-                    % A diferent type of data will require a different case
+                    % if there is string data copy DATAFRAME
+                    % A diferent type of data may require a different case
             end
         end
         
@@ -175,18 +173,19 @@ classdef FrameObj
         function value = get.dataSize(obj)
             switch obj.frameType
                 case FrameObj.DATAFRAME %DATA
-                    %This will always be a whole number
-                    value = (length(obj.data)-8)/8;
+                    %We divide by 8 to convert from bits to bytes and
+                    %subtract 1 to account for the CRC
+                    value = (length(obj.data)/8)-1;
                 case FrameObj.ACKFRAME %ACK
                     value = 0;
                 otherwise
                     error('Not a supported frame type for dataSize')
-                    % if you get this error using a legitimate frame type
-                    % that should exist plese add an addiional elseif for
-                    % that frame type.
-                    % if there is no data for this frame type copy ACKFRAME
-                    % if there is str data copy DATAFRAME
-                    % A diferent type of data will require a different case
+                    % If this error occurs while using a legitimate frame
+                    % type please add an addiional case statement for that
+                    % frame type.
+                    % If there is no data for this frame type copy ACKFRAME
+                    % If there is string data copy DATAFRAME
+                    % A diferent type of data may require a different case
             end
         end
         
@@ -205,20 +204,22 @@ classdef FrameObj
                 case FrameObj.ACKFRAME %ACK
                     value = '';
                 otherwise
-                    error('Not a supported frame type for dataSize')
-                    % if you get this error using a legitimate frame type
-                    % that should exist plese add an addiional elseif for
-                    % that frame type.
-                    % if there is no data for this frame type copy ACKFRAME
-                    % if there is data copy DATAFRAME
+                    error('Not a supported frame type for CRC8')
+                    % If this error occurs while using a legitimate frame
+                    % type please add an addiional case statement for that
+                    % frame type.
+                    % If there is no data for this frame type copy ACKFRAME
+                    % If there is data copy DATAFRAME
             end
         end
         
 %frameArray
-        %frameType dependentACKFRAME  = type, rcvID, sndID
-        %                   DATAFRAME = type, rcvID, sndID, size, data, CRC
+        %frameType dependent
+        % ACKFRAME  = type, rcvID, sndID
+        % DATAFRAME = type, rcvID, sndID, size, data, CRC
+        % If we want to fill the end with zeros that could easily be done 
         function value = get.frameArray(obj)
-            %we convert everything into a binary array
+            %we convert everything into binary arrays
             type_array  = de2bi(obj.frameType,8,'left-msb');
             rcvid_array = de2bi(obj.rcvID,8,'left-msb');
             sndid_array = de2bi(obj.sndID,8,'left-msb');
@@ -233,13 +234,14 @@ classdef FrameObj
                     value = [type_array'; rcvid_array'; sndid_array';];
                 otherwise
                     error('Not a supported frame type for frameArray')
-                    % if you get this error using a legitimate frame type
-                    % that should exist plese add an addiional elseif for
-                    % that frame type.
-                    % if there is no data for this frame type copy ACKFRAME
-                    % if there is data copy DATAFRAME
-                    
+                    % If this error occurs while using a legitimate frame
+                    % type please add an addiional case statement for that
+                    % frame type.
+                    % If there is no data for this frame type copy ACKFRAME
+                    % If there is data copy DATAFRAME
+                    % A diferent type of data may require a different case.  
             end
+            
         end
     end
 end
