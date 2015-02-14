@@ -1,14 +1,27 @@
 classdef FrameObj
-    %FRAMEOBJ creates frames and decodes them
+    %FRAMEOBJ 
     %   There are 2 input configuraions; 4 inputs mean you are using the
     %   frame requirements to create a FrameObj, 1 input means you are
     %   are using the bits.
+    %   In the first configuration (4 inputs) the first 3 inputs must be
+    %   numbers and it is recommended that the constant properties of
+    %   FrameObj are used to ensure accuracy. The last input depends on the
+    %   frameType.
+    %   When using DATAFRAME with 4 inputs the last input must be a string
+    %   and only the first 236 characters will be included.
+    %   When using the ACKFRAME with 4 inputs the last input does not
+    %   matter but must exist.
+    %   In the second configuration (1 input) the input must be a binary
+    %   nx1 array with a supported frame type in the first byte. To ensure
+    %   that there is no indexing outside the dimensions of the input array
+    %   it is best if all inputs have a size of 1920x1
+    
     
     properties (Constant)
         IDBS1 = 100;
         IDUE1 = 101;
         IDUE2 = 102;
-        IDUE3 =203;
+        IDUE3 = 203;
         IDBS2 = 200;
         CHUE1BS1 = 1;
         CHUE2BS1 = 2;
@@ -25,7 +38,7 @@ classdef FrameObj
         DECODE = 2;
     end
     properties
-        classUse    %Identified whether we are
+        classUse    %Identifies which configuration we are in
         frameType   %When sending messages we will use several frame types
         rcvID       %The identification number of the destination receiver
         sndID       %The identification number of the sender.
@@ -55,17 +68,21 @@ classdef FrameObj
                 
             %create a FrameObj with 1 array of bits
             elseif nargin == 1
+                
                 %Not sure if we need to do this. It might just be a
                 %reminder that inputType is not the data that is being used 
                 %by the class properties in this case.
                 bitwise = inputType;
+                
                 obj.classUse = bitwise;
+                
                 %We are actually converting the array of bits here and then
                 %passing the pretty decimal numbers we get to the property
                 %functions.
                 obj.frameType = bi2de(bitwise(1:8,1)','left-msb');
                 obj.rcvID =     bi2de(bitwise(1+8:2*8,1)','left-msb');
                 obj.sndID =     bi2de(bitwise(1+2*8:3*8,1)','left-msb');
+                
                 %Whether there is data or not depends on frameType the 
                 %location of data in the frame is dependent on dataSize so 
                 %we pass the unaltered FrameObj input to obj.data
@@ -92,7 +109,7 @@ classdef FrameObj
         
 %frameType
         function obj = set.frameType(obj,inputframeType)
-            %using the switch statement in this way ensures that a
+            %Using the switch statement in this way ensures that a
             %supported data type is used
             switch inputframeType
                 case FrameObj.DATAFRAME %DATA
@@ -151,6 +168,12 @@ classdef FrameObj
                         Temp =  bi2de(datainput(1+3*8:4*8,1)','left-msb');
                         ds = double(Temp+1); %Add 1 for CRC, Cast to double
                         ds = (ds*8);         %Convert from bytes to bits
+                        if ds>=1880
+                            %This allows use to continue funstioning even
+                            %if the dataSize was corrupted to be larger
+                            %than 235
+                            ds= 1880;
+                        end
                         %Seperate data using length (ds) & start
                         %(index 4*8+1)
                         obj.data = double(datainput(4*8+1:(4*8)+ds,1));
