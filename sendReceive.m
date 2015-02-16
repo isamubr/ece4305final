@@ -14,7 +14,7 @@ switch channelNumber
         if(originNode == FrameObj.IDUE1)
             %BS receive and routing
             %check the final destination
-            finalDestination = getSenderFromArray(frame);
+            finalDestination = getReceiverFromArray(frame);
             switch finalDestination
                 case FrameObj.IDUE2
                     status = sendReceive(FrameObj.CHUE2BS1,frame,FramObj.IDBS1);
@@ -39,7 +39,7 @@ switch channelNumber
             %BS receive and routing
             %send to the defined channel
                %check the final destination
-            finalDestination = getSenderFromArray(frame);
+            finalDestination = getReceiverFromArray(frame);
             switch finalDestination
                 case FrameObj.IDUE1
                     status = sendReceive( FrameObj.CHUE1BS1,frame, FrameObj.IDBS1 );
