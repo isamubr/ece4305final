@@ -23,12 +23,15 @@ classdef FrameObj
         IDUE2 = 102;
         IDUE3 = 203;
         IDBS2 = 200;
+		IDALLUE = 000;
         CHUE1BS1 = 1;
         CHUE2BS1 = 2;
         CHBS1BS2 = 3;
         CHUE3BS2 = 4;
         DATAFRAME = 1;
         ACKFRAME = 2;
+        POLLFRAME = 3;
+        REQFRAME = 4;
         CRCOK = 1;
         CRCFAIL = 2;
         ACKRECEIVED = 3;
