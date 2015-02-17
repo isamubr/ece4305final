@@ -119,6 +119,10 @@ classdef FrameObj
                     obj.frameType = uint8(inputframeType);
                 case FrameObj.ACKFRAME %ACK
                     obj.frameType = uint8(inputframeType);
+                case FrameObj.POLLFRAME %POLL
+                    obj.frameType = uint8(inputframeType);
+        	case FrameObj.REQFRAME %REQ
+                    obj.frameType = uint8(inputframeType);
                 otherwise
                     error('Not a supported frame type for FrameObj')
                     % If this error occurs while using a legitimate frame
@@ -183,6 +187,10 @@ classdef FrameObj
                     end
                 case FrameObj.ACKFRAME %ACK
                     obj.data = '';
+                case FrameObj.POLLFRAME %POLL
+                    obj.data = bi2de();%work on this
+                case FrameObj.REQFRAME %REQ
+                    obj.data = bi2de(); %work on this
                 otherwise
                     error('Not a supported frame type for data')
                     % If this error occurs while using a legitimate frame
