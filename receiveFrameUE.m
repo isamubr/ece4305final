@@ -2,10 +2,6 @@ function [ status, frameOut ] = receiveFrameUE( frame_array )
 %RECEIVEFRAMEUE Summary of this function goes here
 %   Detailed explanation goes here
 % receate the frame from the array
-%   persistent best; 
-%     if(isEmpty(best))
-%         best = BestPower(0, 0);%initialize best
-%     end
 receivedFrame = FrameObj(frame_array);
 if(receivedFrame.frameType == FrameObj.DATAFRAME)
     
@@ -36,10 +32,6 @@ elseif (frame.frameType == FrameObj.POLLFRAME)
     
     frameOut = 0; %figure this out
     status = 0; %figure this out
-%     newPower = 0; %calculate the power from this base station.
-%     if(newPower > BestPower.Power)
-%         best = BestPower(frame.sndID, newPower);%store the best power as a persistent variable.
-%     end 
 else
         error('Not valid frame Type')
         % If this error occurs if a new channel type is used
