@@ -27,11 +27,10 @@ elseif (receivedFrame.frameType == FrameObj.ACKFRAME)
     status = FrameObj.ACKRECEIVED ;
 elseif (frame.frameType == FrameObj.POLLFRAME)
     
-    toTimeSync(frame.data, frame.recID);%send time and UEID to wait to generate REQ
+    status = toTimeSync(frame.data);%send time and UEID to wait to generate REQ
     
     
     frameOut = 0; %figure this out
-    status = 0; %figure this out
 else
         error('Not valid frame Type')
         % If this error occurs if a new channel type is used
