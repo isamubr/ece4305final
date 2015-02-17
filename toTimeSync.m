@@ -1,4 +1,4 @@
-function [status] = toTimeSync(time_left)
+function [status, frameout] = toTimeSync(time_left)
 status = stop;
 tic ;
 time inf;
@@ -9,4 +9,4 @@ while t<time
   		time = time_left;
   	end
 end
-status = go;
+[status, frameout] = decide();
