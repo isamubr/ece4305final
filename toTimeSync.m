@@ -1,12 +1,10 @@
-function [status, frameout] = toTimeSync(time_left)
+function [status, frameout] = toTimeSync(time_data)
+% time_data is formatted to be in seconds.
 status = stop;
-tic ;
-time inf;
-t =0;
-while t<time
-  t = toc;
-  	if decoded %if frame is decoded correctly
-  		time = time_left; %make time the time left
-  	end
+time_sec = mod(time_data, 60); %get time in seconds
+time_min = floor(time_data/60); %get time in minutes
+t = clock;
+while ((t(5) < time_min) & (t(6) < time_sec))% while the minutes and seconds are not equal to the time wanted
+t = clock; %update the clock
 end
 [status, frameout] = decide(); %when we time out, go to decide
