@@ -24,22 +24,27 @@ classdef FrameObj
         IDUE3 = 203;
         IDBS2 = 200;
 		IDALLUE = 000;
+        
         CHUE1BS1 = 1;
         CHUE2BS1 = 2;
         CHBS1BS2 = 3;
         CHUE3BS2 = 4;
+        
         DATAFRAME = 1;
-        ACKFRAME = 2;
+        ACKFRAME  = 2;
         POLLFRAME = 3;
-        REQFRAME = 4;
+        REQFRAME  = 4;
+        
         CRCOK = 1;
         CRCFAIL = 2;
+        
         ACKRECEIVED = 3;
         TIMEOUT = 4;
         
         ENCODE = 1;
         DECODE = 2;
     end
+    
     properties
         classUse    %Identifies which configuration we are in
         frameType   %When sending messages we will use several frame types
@@ -117,11 +122,11 @@ classdef FrameObj
             switch inputframeType
                 case FrameObj.DATAFRAME %DATA
                     obj.frameType = uint8(inputframeType);
-                case FrameObj.ACKFRAME %ACK
+                case FrameObj.ACKFRAME  %ACK
                     obj.frameType = uint8(inputframeType);
                 case FrameObj.POLLFRAME %POLL
                     obj.frameType = uint8(inputframeType);
-        	case FrameObj.REQFRAME %REQ
+                case FrameObj.REQFRAME  %REQ
                     obj.frameType = uint8(inputframeType);
                 otherwise
                     error('Not a supported frame type for FrameObj')
@@ -142,9 +147,10 @@ classdef FrameObj
         end
         
 %data
-        %frameType dependent --returns '' if ACK
+        %frameType dependent
         %classUse dependent
-        %data actually refers to the data and the CRC8 number
+        %data actually refers to the data and the CRC8 number in a n*1
+        %binary array
         function obj = set.data(obj,datainput)
             switch obj.frameType
                 case FrameObj.DATAFRAME %DATA
@@ -186,7 +192,9 @@ classdef FrameObj
                         obj.data = double(datainput(4*8+1:(4*8)+ds,1));
                     end
                 case FrameObj.ACKFRAME %ACK
-                    obj.data = '';
+                    error('This is an ACK, it has no data')
+                    %if there is no data you should not try to access tha
+                    %ACK data
                 case FrameObj.POLLFRAME %POLL
                     obj.data = bi2de();%work on this
                 case FrameObj.REQFRAME %REQ
@@ -203,15 +211,20 @@ classdef FrameObj
         end
         
 %dataSize
-        %frameType dependent --returns 0 if ACK
+        % frameType dependent 
+        % returns 0 if ACK
         function value = get.dataSize(obj)
             switch obj.frameType
                 case FrameObj.DATAFRAME %DATA
                     %We divide by 8 to convert from bits to bytes and
                     %subtract 1 to account for the CRC
                     value = (length(obj.data)/8)-1;
-                case FrameObj.ACKFRAME %ACK
+                case FrameObj.ACKFRAME  %ACK
                     value = 0;
+                    %error('This is an ACK, it has no data')
+                    % there is no reason to use ack.dataSize, but the size
+                    % of the data is technically zero....
+                    % We have the option of implementing this error
                 otherwise
                     error('Not a supported frame type for dataSize')
                     % If this error occurs while using a legitimate frame
@@ -224,7 +237,7 @@ classdef FrameObj
         end
         
 %CRC8
-        %frameType dependent --returns '' if ACK
+        %frameType dependent 
         function value = get.CRC8(obj)
             switch obj.frameType
                 case FrameObj.DATAFRAME %DATA
@@ -236,7 +249,8 @@ classdef FrameObj
                         value(j,1) = obj.data(m-8+j,1);
                     end
                 case FrameObj.ACKFRAME %ACK
-                    value = '';
+                    error('This is an ACK, it has no data therefor no CRC')
+                    %If there is no data there should be no check  
                 otherwise
                     error('Not a supported frame type for CRC8')
                     % If this error occurs while using a legitimate frame
@@ -273,9 +287,8 @@ classdef FrameObj
                     % frame type.
                     % If there is no data for this frame type copy ACKFRAME
                     % If there is data copy DATAFRAME
-                    % A diferent type of data may require a different case.  
-            end
-            
+                    %A diferent type of frame may require a different case.  
+            end 
         end
     end
 end
