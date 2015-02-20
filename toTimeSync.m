@@ -1,4 +1,4 @@
-function frameout = toTimeSync(time_data)
+function toTimeSync(time_data)
 % time_data is formatted to be in seconds.
 status = stop;
 time_sec = mod(time_data, 60); %get time in seconds
