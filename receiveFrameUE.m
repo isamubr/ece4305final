@@ -6,7 +6,7 @@ receivedFrame = FrameObj(frame_array);
 if(receivedFrame.frameType == FrameObj.DATAFRAME)
     
     hDetect = comm.CRCDetector([8 7 6 4 2 0]);
-    
+    receivedFrame.sndID
     %TODO CRC verification 
     [~, err] = step(hDetect, receivedFrame.data);
     %err = 0;
