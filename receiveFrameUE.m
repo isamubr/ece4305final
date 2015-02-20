@@ -27,7 +27,8 @@ elseif (receivedFrame.frameType == FrameObj.ACKFRAME)
     status = FrameObj.ACKRECEIVED ;
 elseif (frame.frameType == FrameObj.POLLFRAME)
     
-    status = toTimeSync(frame.data);%send time and UEID to wait to generate REQ
+    status = 0;
+    toTimeSync(frame.data);%send time and UEID to wait to generate REQ
     
     
     frameOut = 0; %figure this out
