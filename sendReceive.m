@@ -62,7 +62,7 @@ switch channelNumber
             switch status
                 case FrameObj.CRCOK
                     %To DO routing of the ACK
-                    status = sendReceive( FrameObj.CHUE1BS1,frameOut.frameArray, FramObj.IDBS1 )
+                    status = sendReceive( FrameObj.CHUE1BS1,frameOut.frameArray, FramObj.IDBS1 );
                 otherwise
                    % TO DO timeout for ACK error or ACK receveid
             end

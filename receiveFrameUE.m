@@ -15,7 +15,8 @@ if(receivedFrame.frameType == FrameObj.DATAFRAME)
         %switch the role of send and received of the received package
         % the recevied ID is now the send ID
         
-        frameOut = FrameObj(FrameObj.ACKFRAME,receivedFrame.sndID,receivedFrame.rcvID,0);% the payload will be zero (as long as Team 4 agrees)
+        frameOut = FrameObj(FrameObj.ACKFRAME,receivedFrame.sndID,receivedFrame.rcvID,0);
+        % the payload will be zero (as long as Team 4 agrees)
         status = FrameObj.CRCOK;
     else
         frameOut = 0;
