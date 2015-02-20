@@ -1,6 +1,5 @@
 function toTimeSync(time_data)
 % time_data is formatted to be in seconds.
-status = stop;
 time_sec = mod(time_data, 60); %get time in seconds
 time_min = floor(time_data/60); %get time in minutes
 t = clock;
