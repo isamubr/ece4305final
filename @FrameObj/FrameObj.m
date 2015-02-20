@@ -34,6 +34,7 @@ classdef FrameObj
         ACKFRAME  = 2;
         POLLFRAME = 3;
         REQFRAME  = 4;
+        TABLEFRAME=5;
         
         CRCOK = 1;
         CRCFAIL = 2;
