@@ -192,9 +192,10 @@ classdef FrameObj
                         obj.data = double(datainput(4*8+1:(4*8)+ds,1));
                     end
                 case FrameObj.ACKFRAME %ACK
-                    error('This is an ACK, it has no data')
+                    value = '';
                     %if there is no data you should not try to access tha
-                    %ACK data
+                    %ACK data but there needs to not be an error when we
+                    %create the frame 
                 case FrameObj.POLLFRAME %POLL
                     obj.data = bi2de();%work on this
                 case FrameObj.REQFRAME %REQ
