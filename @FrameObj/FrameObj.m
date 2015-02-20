@@ -55,7 +55,9 @@ classdef FrameObj
     end
     properties (Dependent)
         dataSize    %Indicates the length of the payload in bytes.
-        CRC8        %CRC-8 code verfication of the data field
+        header
+        HCRC8       %CRC-8 code verfication of the header field
+        DCRC8       %CRC-8 code verfication of the data field
         frameArray  %The frame as a n*1 array
     end
     
@@ -237,9 +239,58 @@ classdef FrameObj
             end
         end
         
-%CRC8
+%header 
         %frameType dependent 
-        function value = get.CRC8(obj)
+        function value = get.header(obj)
+            
+            switch obj.frameType
+                case FrameObj.DATAFRAME %DATA
+                    %we convert everything into binary arrays
+                    type_array  = de2bi(obj.frameType,8,'left-msb');
+                    rcvid_array = de2bi(obj.rcvID,8,'left-msb');
+                    sndid_array = de2bi(obj.sndID,8,'left-msb');
+                    size_array  = de2bi(obj.dataSize,8,'left-msb');
+                    
+                    temp_header = [type_array'; rcvid_array'; sndid_array';size_array']
+                    
+                    crcGen = comm.CRCGenerator([8 7 6 4 2 0]);
+                    %Calculates the CRC and adds it to the end of header
+                    obj.header =  step(crcGen, temp_header);
+                case FrameObj.ACKFRAME %ACK
+                    %we convert everything into binary arrays
+                    type_array  = de2bi(obj.frameType,8,'left-msb');
+                    rcvid_array = de2bi(obj.rcvID,8,'left-msb');
+                    sndid_array = de2bi(obj.sndID,8,'left-msb');
+                                       
+                    temp_header = [type_array'; rcvid_array'; sndid_array']
+                    
+                    crcGen = comm.CRCGenerator([8 7 6 4 2 0]);
+                    %Calculates the CRC and adds it to the end of header
+                    obj.header =  step(crcGen, temp_header);
+                otherwise
+                    error('Not a supported frame type for CRC8')
+                    % If this error occurs while using a legitimate frame
+                    % type please add an addiional case statement for that
+                    % frame type.
+                    % If there is no data for this frame type copy ACKFRAME
+                    % If there is data copy DATAFRAME
+            end
+        end
+%HCRC8 
+    function value = get.HCRC8(obj)
+    
+        %The last byte of obj.header is the HCRC. It is seperated
+        %from the header here
+        [m, ~] = size(obj.header);
+        value =zeros(8,1);      %Define value for speed
+        for j=1:8
+            value(j,1) = obj.header(m-8+j,1);
+        end   
+    end
+    
+%DCRC8
+        %frameType dependent 
+        function value = get.DCRC8(obj)
             switch obj.frameType
                 case FrameObj.DATAFRAME %DATA
                     %The last byte of obj.data is the CRC. It is seperated
@@ -261,26 +312,21 @@ classdef FrameObj
                     % If there is data copy DATAFRAME
             end
         end
-        
+
 %frameArray
-        %frameType dependent
+    %frameType dependent
         % ACKFRAME  = type, rcvID, sndID
         % DATAFRAME = type, rcvID, sndID, size, data, CRC
         % If we want to fill the end with zeros that could easily be done 
         function value = get.frameArray(obj)
-            %we convert everything into binary arrays
-            type_array  = de2bi(obj.frameType,8,'left-msb');
-            rcvid_array = de2bi(obj.rcvID,8,'left-msb');
-            sndid_array = de2bi(obj.sndID,8,'left-msb');
-            size_array  = de2bi(obj.dataSize,8,'left-msb');
+            
             
             %and combine them in a n*1 binary array
             switch obj.frameType
                 case obj.DATAFRAME
-                    value = [type_array'; rcvid_array'; sndid_array'; 
-                             size_array'; obj.data];
+                    value = [obj.header; obj.data];
                 case obj.ACKFRAME
-                    value = [type_array'; rcvid_array'; sndid_array';];
+                    value = [obj.header];
                 otherwise
                     error('Not a supported frame type for frameArray')
                     % If this error occurs while using a legitimate frame
