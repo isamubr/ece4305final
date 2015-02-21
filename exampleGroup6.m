@@ -7,13 +7,13 @@
 %       Le Wang lewang@wpi.edu
 %       Rebecca Cooper rrcooper@wpi.edu
 % Cases coved by this examples
-%US1 -> BS1 -> BS2 -> US3
-%US3 -> BS2 -> BS1 -> US1
-%US2 -> BS1 -> BS2 -> US3
-%US3 -> BS2 -> BS1 -> US2
+%UE1 -> BS1 -> BS2 -> UE3
+%UE3 -> BS2 -> BS1 -> UE1
+%UE2 -> BS1 -> BS2 -> UE3
+%UE3 -> BS2 -> BS1 -> UE2
 % Intra-cellular communications between UEs:
-%US1 -> BS1 -> US2
-%US2 -> BS1 -> US1
+%UE1 -> BS1 -> UE2
+%UE2 -> BS1 -> UE1
 
 
 % Import the objects
@@ -34,7 +34,8 @@ FER = zeros(nTest,1);
 %TDO DO Only test intercell for US2 to US2
 %change the for for all cases
 for indexTest = nTest:nTest
-    tempString =   strcat(num2str(sendersIDS), '_', num2str(receiversIDS), '_Hello');
+    %%tempString =   strcat(num2str(sendersIDS), '_', num2str(receiversIDS), '_Hello');
+    tempString =   strcat('Hello World');
     frame = FrameObj(FrameObj.DATAFRAME,receiversIDS(indexTest),sendersIDS(indexTest),tempString);
     
  
