@@ -213,9 +213,12 @@ classdef FrameObj
                     %ACK data but there needs to not be an error when we
                     %create the frame
                 case FrameObj.POLLFRAME %POLL
-                    obj.data = bi2de();%work on this
+                    obj.data = bi2de(datainput);%work on this
+                        %is there anything we don't want converted here?
+                        %unsure
                 case FrameObj.REQFRAME %REQ
-                    obj.data = bi2de(); %work on this
+                    obj.data = bi2de(); %work on this.
+                %Do we need this?  Currently no data to be passed besides recID and sendID.
                 otherwise
                     error('Not a supported frame type for data')
                     % If this error occurs while using a legitimate frame
