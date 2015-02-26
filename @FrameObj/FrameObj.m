@@ -27,13 +27,15 @@ classdef FrameObj
         IDBS2 = 200;
         IDALLUE = 000;
         
-        % for frameTypes
-        DATAFRAME = 1;
-        ACKFRAME  = 2;
-        POLLFRAME = 3;
-        REQFRAME  = 4;
-        TABLEFRAME= 5;
-        INVALID = 254;
+        % for frameTypes    %these numbers are chosen to resist flips and
+        % shifts. It is the most important that frameType is correct as
+        % very wrong frames can be dropped based on frameType
+        DATAFRAME = 240;    %11110000
+        ACKFRAME  = 255;    %11111111
+        POLLFRAME = 216;    %11001100
+        REQFRAME  = 85;     %01010101
+        TABLEFRAME= 15;     %00001111
+        INVALID = 0;        %00000000   
         
         % for classUse
         ENCODE = 1;
