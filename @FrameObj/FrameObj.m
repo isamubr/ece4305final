@@ -19,6 +19,7 @@ classdef FrameObj
     
     
     properties (Constant)
+        %for sndID and rcvID 
         IDBS1 = 100;
         IDUE1 = 101;
         IDUE2 = 102;
@@ -26,11 +27,7 @@ classdef FrameObj
         IDBS2 = 200;
         IDALLUE = 000;
         
-        CHUE1BS1 = 1;
-        CHUE2BS1 = 2;
-        CHBS1BS2 = 3;
-        CHUE3BS2 = 4;
-        
+        % for frameTypes
         DATAFRAME = 1;
         ACKFRAME  = 2;
         POLLFRAME = 3;
@@ -38,15 +35,21 @@ classdef FrameObj
         TABLEFRAME= 5;
         INVALID = 254;
         
+        % for classUse
+        ENCODE = 1;
+        DECODE = 2;
+        
+        CHUE1BS1 = 1;
+        CHUE2BS1 = 2;
+        CHBS1BS2 = 3;
+        CHUE3BS2 = 4;
+  
         CRCOK = 1;
         CRCFAIL = 2;
         
         ACKRECEIVED = 3;
         TIMEOUT = 4;
-        
-        ENCODE = 1;
-        DECODE = 2;
-        
+
         MAXDATA = 234; % Probably the only constant that has meaning
         MAXBYTES = 240; 
     end
@@ -91,16 +94,16 @@ classdef FrameObj
                  
                 %size check
                 [size_in, ~] = size(bitwise);
-                if (size_in >= 32)
+                if (size_in >= 40)
                     % hCRC check
                     %isolate the crc calculated before transmission
-                    input_crc = bitwise(1+3*8:4*8,1);
+                    input_crc = bitwise(1+4*8:5*8,1);
                     % needed for the crc calculation
                     crcGen = comm.CRCGenerator([8 7 6 4 2 0]);
                     %Calculates the CRC and adds it to the end of header
-                    crcheader = step(crcGen, bitwise(1:3*8,1));
+                    crcheader = step(crcGen, bitwise(1:4*8,1));
                     %isolate the crc calculated after transmission
-                    check_crc = crcheader(3*8+1:end);
+                    check_crc = crcheader(4*8+1:end);
                     % hCRC check
                     if (input_crc == check_crc)
                         obj.classUse = bitwise;
@@ -160,6 +163,8 @@ classdef FrameObj
                 case FrameObj.INVALID   %INVALID
                     obj.frameType = uint8(inputframeType);
                 otherwise
+                    obj.frameType = uint8(FrameObj.INVALID);
+                    
                     error('Not a supported frame type for FrameObj')
                     % If this error occurs while using a legitimate frame
                     % type please add an addiional case statement for that
@@ -217,7 +222,7 @@ classdef FrameObj
                         
                         %First seperate dataSize then convert to decimal
                         %Cast to double and convert from bytes to bits
-                        Temp =  bi2de(datainput(1+4*8:5*8,1)','left-msb');
+                        Temp =  bi2de(datainput(1+3*8:4*8,1)','left-msb');
                         ds = double(Temp*8);       
                         
                         %This allows FrameObj to continue running even if
@@ -232,10 +237,10 @@ classdef FrameObj
                         obj.data = double(datainput(header_bytes*8+1:header_bytes*8+ds+8,1));
                     end
                 case FrameObj.ACKFRAME %ACK
-                    obj.data = '';
+                    obj.data = ''; %could be anything
                     %if there is no data you should not try to access tha
-                    %ACK data but there needs to not be an error when we
-                    %create the frame
+                    %ACK data but data is always assesed regardless of the
+                    %frameType
                 case FrameObj.POLLFRAME %POLL
                     obj.data = bi2de(datainput);%work on this
                         %is there anything we don't want converted here?
@@ -243,6 +248,11 @@ classdef FrameObj
                 case FrameObj.REQFRAME %REQ
                     obj.data = bi2de(); %work on this.
                 %Do we need this?  Currently no data to be passed besides recID and sendID.
+                case FrameObj.INVALID   %INVALID
+                    obj.data = ''; %could be anything
+                    %if there is no valid frameType you should not try to
+                    %access tha data but data is always assesed regardless
+                    %of the frameType
                 otherwise
                     error('Not a supported frame type for data')
                     % If this error occurs while using a legitimate frame
@@ -266,11 +276,7 @@ classdef FrameObj
                     value = (length(obj.data)/8)-1;
                 case FrameObj.ACKFRAME  %ACK
                     value = 0;
-                    %error('This is an ACK, it has no data')
-                    
-                    % there is no reason to use ack.dataSize, but the size
-                    % of the data is technically zero....
-                    % We have the option of implementing this error
+                    %the ACKFRAME has no data but it must have a dataSize
                 otherwise
                     error('Not a supported frame type for dataSize')
                     % If this error occurs while using a legitimate frame
@@ -278,7 +284,7 @@ classdef FrameObj
                     % frame type.
                     
                     % If there is no data for this frame type copy ACKFRAME
-                    % If there is string data copy DATAFRAME
+                    % If there is data copy DATAFRAME
                     % A diferent type of data may require a different case
             end
         end
@@ -310,16 +316,16 @@ classdef FrameObj
         end
         
 %header
-        %frameType dependent
-        %ACKFRAME  --> frametype, sndID, rcvID, hCRC8
-        %DATAFRAME --> frametype, sndID, rcvID, dataSize, hCRC8
+        %all frametypes have the same length and components
+        %frametype, sndID, rcvID, dataSize, hCRC8
         function value = get.header(obj)
             % Each part of the header is converted into binary arrays
             type_array  = de2bi(obj.frameType,8,'left-msb');
             rcvid_array = de2bi(obj.rcvID,8,'left-msb');
             sndid_array = de2bi(obj.sndID,8,'left-msb');
+            size_array  = de2bi(obj.dataSize,8,'left-msb');
             
-            temp_header = [type_array rcvid_array sndid_array];
+            temp_header = [type_array rcvid_array sndid_array size_array];
             
             crcGen = comm.CRCGenerator([8 7 6 4 2 0]);
             %Calculates the CRC and adds it to the end of header
@@ -340,16 +346,17 @@ classdef FrameObj
         
 %frameArray
         %frameType dependent
+        %ACKFRAME --> frametype, sndID, rcvID, dataSize, hCRC8
+        %DATAFRAME--> frametype, sndID, rcvID, dataSize, hCRC8, data, dCRC8
         % If we want to fill the end with zeros that could easily be done
         function value = get.frameArray(obj)
             % for data we combine the data and header in a n*1 binary array
             % the ack is only a header.
             % both header and data have a crc8 included
-            size_array  = de2bi(obj.dataSize,8,'left-msb');
-            
+
             switch obj.frameType
                 case obj.DATAFRAME
-                    value = [obj.header; size_array'; obj.data];
+                    value = [obj.header; obj.data];
                 case obj.ACKFRAME
                     value = [obj.header];
                 otherwise
