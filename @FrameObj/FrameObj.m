@@ -164,8 +164,8 @@ classdef FrameObj
                     obj.frameType = uint8(inputframeType);
                 otherwise
                     obj.frameType = uint8(FrameObj.INVALID);
-                    
-                    error('Not a supported frame type for FrameObj')
+                                        
+                    %error('Not a supported frame type for FrameObj')
                     % If this error occurs while using a legitimate frame
                     % type please add an addiional case statement for that
                     % frame type.
