@@ -32,8 +32,8 @@ classdef FrameObj
         % very wrong frames can be dropped based on frameType
         DATAFRAME = 240;    %11110000
         ACKFRAME  = 255;    %11111111
-        POLLFRAME = 216;    %11001100
-        REQFRAME  = 85;     %01010101
+        POLLFRAME = 202;    %11001010
+        REQFRAME  = 83;     %01010011
         TABLEFRAME= 15;     %00001111
         INVALID = 0;        %00000000   
         
