@@ -30,12 +30,12 @@ classdef FrameObj
         % for frameTypes    %these numbers are chosen to resist flips and
         % shifts. It is the most important that frameType is correct as
         % very wrong frames can be dropped based on frameType
-        DATAFRAME = 240;    %11110000
-        ACKFRAME  = 255;    %11111111
-        POLLFRAME = 202;    %11001010
-        REQFRAME  = 83;     %01010011
-        TABLEFRAME= 15;     %00001111
-        INVALID = 0;        %00000000   
+        DATAFRAME = 240;    %1111 0000
+        ACKFRAME  = 255;    %1111 1111
+        POLLFRAME = 202;    %1100 1010
+        REQFRAME  =  83;    %0101 0011
+        TABLEFRAME = 15;    %0000 1111
+        INVALID = 0;        %0000 0000   
         
         % for classUse
         ENCODE = 1;
@@ -98,28 +98,26 @@ classdef FrameObj
                 [size_in, ~] = size(bitwise);
                 if (size_in >= 40)
                     % hCRC check
-                    %isolate the crc calculated before transmission
-                    input_crc = bitwise(1+4*8:5*8,1);
+                    
                     % needed for the crc calculation
-                    crcGen = comm.CRCGenerator([8 7 6 4 2 0]);
-                    %Calculates the CRC and adds it to the end of header
-                    crcheader = step(crcGen, bitwise(1:4*8,1));
-                    %isolate the crc calculated after transmission
-                    check_crc = crcheader(4*8+1:end);
-                    % hCRC check
-                    if (input_crc == check_crc)
+                    hDetect = comm.CRCDetector([8 7 6 4 2 0]);
+                    % detects if there is an error in the CRC of the header
+                    [~, err] = step(hDetect, bitwise(1:5*8,1));
+                    
+                    if (err ==0)
                         obj.classUse = bitwise;
                         
-                        %We are actually converting the array of bits here and then
-                        %passing the pretty decimal numbers we get to the property
-                        %functions.
+                        %We are actually converting the array of bits here
+                        %and then passing the pretty decimal numbers we get
+                        %to the propertyfunctions.
                         obj.frameType = bi2de(bitwise(1:8,1)','left-msb');
-                        obj.rcvID     = bi2de(bitwise(1+8:2*8,1)','left-msb');
-                        obj.sndID     = bi2de(bitwise(1+2*8:3*8,1)','left-msb');
+                        obj.rcvID = bi2de(bitwise(1+8:2*8,1)','left-msb');
+                        obj.sndID =bi2de(bitwise(1+2*8:3*8,1)','left-msb');
                         
-                        %Whether there is data or not depends on frameType. The
-                        %location of data in the frame is dependent on dataSize so
-                        %we pass the unaltered FrameObj input to obj.data
+                        %Whether there is data or not depends on frameType.
+                        %The location of data in the frame is dependent on
+                        %dataSize so we pass the unaltered FrameObj input
+                        %to obj.data
                         obj.data = bitwise;
                     else
                         % the crc does not match and the header is junk
@@ -164,13 +162,8 @@ classdef FrameObj
                     obj.frameType = uint8(inputframeType);
                 case FrameObj.INVALID   %INVALID
                     obj.frameType = uint8(inputframeType);
-                otherwise
+                otherwise % also INVALID
                     obj.frameType = uint8(FrameObj.INVALID);
-                                        
-                    %error('Not a supported frame type for FrameObj')
-                    % If this error occurs while using a legitimate frame
-                    % type please add an addiional case statement for that
-                    % frame type.
             end
         end
         
@@ -192,33 +185,33 @@ classdef FrameObj
         function obj = set.data(obj,datainput)
             %These variables mean we can vary the size of MAXBYTES or the
             %header without and data will still be functional.
-            data_bits = FrameObj.MAXDATA*8;
-            header_bytes = FrameObj.MAXBYTES-(FrameObj.MAXDATA+1);
+            header_bits = (FrameObj.MAXBYTES-(FrameObj.MAXDATA+1))*8;
+            max_data_bits = FrameObj.MAXDATA*8;
             switch obj.frameType
                 case FrameObj.DATAFRAME %DATA
                     if obj.classUse == FrameObj.ENCODE;
                         %This converts the datainput into an array of bits
                         temp_bin = reshape(dec2bin(datainput,8)',1,[]);
-                        if size(temp_bin,2)>=data_bits
-                            %Define the length of temp_data for speed
-                            temp_data = zeros(1,data_bits);
-                            
-                            for j=1:data_bits
-                                temp_data(1,j) = str2num(temp_bin(1,j));
-                            end
+                        
+                        %Define the length of temp_data for speed
+                        % the length of temp_data is limited by MAXBYTES
+                        if size(temp_bin,2)>=max_data_bits
+                            temp_data = zeros(1,max_data_bits); 
                         else
-                            %Define the length of temp_data for speed
                             temp_data = zeros(1,size(temp_bin,2));
-                            
-                            for j=1:size(temp_bin,2)
-                                temp_data(1,j) = str2num(temp_bin(1,j));
-                            end
+                        end
+                        
+                        for j=1:size(temp_data,2)
+                            temp_data(1,j) = str2num(temp_bin(1,j));
                         end
                         
                         crcGen = comm.CRCGenerator([8 7 6 4 2 0]);
+                        
                         %Calculates the CRC and adds it to the end of data
                         obj.data =  step(crcGen, temp_data');
+                        
                     elseif obj.classUse == FrameObj.DECODE;
+                        data_bits = size(datainput, 1)-header_bits -8;
                         %This seperates the data from the rest of the array
                         %using dataSize.
                         
@@ -227,16 +220,23 @@ classdef FrameObj
                         Temp =  bi2de(datainput(1+3*8:4*8,1)','left-msb');
                         ds = double(Temp*8);       
                         
-                        %This allows FrameObj to continue running even if
-                        %the dataSize was corrupted to be larger than 
-                        %MAXDATA
+                        %This allows FrameObj to not exceed the dimensions
+                        %of inputdata in case the dataSize was corrupted to
+                        %be or larger than the length of the input array
+                        %and passed the hCRC.
                         if ds >= data_bits
-                            ds = data_bits;
+                            ds = data_bits
+                        end
+                        % or larger than MAXDATA
+                        if ds >= max_data_bits
+                            ds = max_data_bits
                         end
                         
                         %Seperate data using the start of the data and the
                         %length+crc
-                        obj.data = double(datainput(header_bytes*8+1:header_bytes*8+ds+8,1));
+                        bits = datainput(header_bits+1:header_bits+ds+8,1);
+                        %cast to double
+                        obj.data = double(bits);
                     end
                 case FrameObj.ACKFRAME %ACK
                     obj.data = ''; %could be anything
@@ -249,7 +249,8 @@ classdef FrameObj
                         %unsure
                 case FrameObj.REQFRAME %REQ
                     obj.data = bi2de(); %work on this.
-                %Do we need this?  Currently no data to be passed besides recID and sendID.
+                %Do we need this?  Currently no data to be passed besides
+                %recID and sendID.
                 case FrameObj.INVALID   %INVALID
                     obj.data = ''; %could be anything
                     %if there is no valid frameType you should not try to
@@ -336,9 +337,7 @@ classdef FrameObj
         
 %hCRC8
         function value = get.hCRC8(obj)
-            %The last byte of obj.header in any case is the hCRC. It is
-            %seperated from the header here. There are different sized headers
-            %so the size must be found.
+            % The last byte of obj.header is the hCRC 
             [m, ~] = size(obj.header);
             value =zeros(8,1);      %Define value for speed
             for j=1:8
