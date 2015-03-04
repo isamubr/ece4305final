@@ -1,4 +1,4 @@
-function DataMessage( datacrc )
+function message =  DataMessage( datacrc )
 %Prints the message found in the data field of the frame array
 %   the input should be _received_frame_.data  from the class FrameObj
 %   there is no output but it does print the message
@@ -11,7 +11,8 @@ databytes = reshape(databits',  8, []);
 % convert each byte into the decimal ascii codes
 dataascii = bi2de(databytes','left-msb');
 % convert to characters 
-char(dataascii') % no semicolon so it prints
+message = char(dataascii'); 
+
 
 end
 
