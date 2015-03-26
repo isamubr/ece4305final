@@ -6,17 +6,9 @@ receivedFrame = FrameObj(frame_array);
 if(receivedFrame.frameType == FrameObj.DATAFRAME)
     
     hDetect = comm.CRCDetector([8 7 6 4 2 0]);
-    receivedFrame.sndID
-    %TODO CRC verification 
     [~, err] = step(hDetect, receivedFrame.data);
-    %err = 0;
     if(err == 0)
-        %create ACK packege
-        %switch the role of send and received of the received package
-        % the recevied ID is now the send ID
-        
         frameOut = FrameObj(FrameObj.ACKFRAME,receivedFrame.sndID,receivedFrame.rcvID,0);
-        % the payload will be zero (as long as Team 4 agrees)
         status = FrameObj.CRCOK;
     else
         frameOut = 0;

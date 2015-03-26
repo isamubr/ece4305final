@@ -26,9 +26,7 @@ switch channelNumber
             switch finalDestination
                 case FrameObj.IDUE2
                     status = sendReceive(FrameObj.CHUE2BS1,frame_Array,FrameObj.IDBS1);
-                otherwise
-                    error('Not valid final destination BS1');
-                    % TO DO routing need to added
+                
             end
         else
             %UE1 receiving
@@ -52,6 +50,8 @@ switch channelNumber
             switch finalDestination
                 case FrameObj.IDUE1
                     status = sendReceive( FrameObj.CHUE1BS1,frame_Array, FrameObj.IDBS1 );
+                 case FrameObj.IDUE3
+                    status = sendReceive( FrameObj.CHBS1BS2,frame_Array, FrameObj.IDBS2 );
                 otherwise
                     error('Not valid final destination BS1');
                     % TO DO routing need to added
@@ -63,7 +63,6 @@ switch channelNumber
             [status,frameOut] = receiveFrameUE( frame_Array );
             switch status
                 case FrameObj.CRCOK
-                    %To DO routing of the ACK
                     status = sendReceive( FrameObj.CHUE2BS1,frameOut.frameArray, FramObj.IDUE2 );
                 otherwise
                    % TO DO timeout for ACK error or ACK receveid
