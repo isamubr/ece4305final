@@ -1,21 +1,22 @@
 classdef FrameObj
     %FRAMEOBJ has 2 input configuraions; 4 inputs mean you are using the
     %frame requirements to create a FrameObj, 1 input means you are using
-    %the bits
+    %the bits. Not all frameTypes have all properties 
     %   In the first configuration (4 inputs) the first 3 inputs must be
     %   numbers and it is recommended that the constant properties of
     %   FrameObj are used to ensure accuracy. The last input depends on the
     %   frameType.
-    %    -DATAFRAME: the last input must be a string and only the first 234 
+    %    -DATAFRAME: The last input must be a string and only the first 234 
     %       characters will be included.
-    %    -ACKFRAME: the last input does not matter but must exist.
-    %    -POLLFRAME 
-    %    -REQFRAME 
-    %    -TABLEFRAME
+    %    -POLLFRAME: The last input is a decimal number representing the
+    %       time
+    %    -TABLEFRAME: The last input is the address table in the form of a
+    %       string. It should always be smaller than 234 characters
+    %    -ACKFRAME: The last input does not matter but must exist.
+    %    -REQFRAME: The last input does not matter but must exist.
     %   In the second configuration (1 input) the input must be a binary
-    %   nx1 array with a supported frame type in the first byte. To ensure
-    %   that there is no indexing outside the dimensions of the input array
-    %   it is best if all inputs have a size of 1920x1
+    %   nx1 array with a supported frame type in the first byte. This array
+    %   must have over 40 bits or it will default to an INVALID frameType
     
     
     properties (Constant)
